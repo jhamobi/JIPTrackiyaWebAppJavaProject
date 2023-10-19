@@ -1,0 +1,136 @@
+package com.jhamobi.trackiya.server.tomcat.servlet;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.PropertyConfigurator;
+
+import com.jhamobi.trackiya.client.model.Vehicle;
+import com.jhamobi.trackiya.server.tomcat.TrackiyaConstants;
+import com.jhamobi.trackiya.server.tomcat.action.Action;
+import com.jhamobi.trackiya.server.tomcat.action.ActionPath;
+import com.jhamobi.trackiya.server.tomcat.action.factory.ActionFactory;
+
+public class TrackiyaServlet extends GenericChannelServlet {
+
+	private static final long serialVersionUID = 1L;
+	
+	private ThreadPoolExecutor executor;
+
+	public void init(ServletConfig config) throws ServletException {
+
+		String log4jLocation = config
+				.getInitParameter("log4j-properties-location");
+
+		ServletContext sc = config.getServletContext();
+
+		if (log4jLocation == null) {
+			System.err
+					.println("*** No log4j-properties-location init param, so initializing log4j with BasicConfigurator");
+			BasicConfigurator.configure();
+		} else {
+			String webAppPath = sc.getRealPath("/");
+			System.setProperty("rootPath", webAppPath);
+			String log4jProp = webAppPath + log4jLocation;
+			File logFile = new File(log4jProp);
+			if (logFile.exists()) {
+				System.out.println("Initializing log4j with: " + log4jProp);
+				PropertyConfigurator.configure(log4jProp);
+			} else {
+				System.err
+						.println("*** "
+								+ log4jProp
+								+ " file not found, so initializing log4j with BasicConfigurator");
+				BasicConfigurator.configure();
+			}
+		}
+
+		 executor = new ThreadPoolExecutor(25, 150, 50000L,
+		    TimeUnit.MILLISECONDS,
+		    new LinkedBlockingQueue<Runnable>(1000));
+		super.init(config);
+
+		actionsMap = new HashMap<String, Action>();
+		ActionPath[] values = ActionPath.values();
+		for (ActionPath actionPath : values) {
+			Action action = ActionFactory.getAction(actionPath);
+			actionsMap.put(actionPath.getPath(), action);
+		}
+
+	}
+
+	@Override
+	public void doGet(final HttpServletRequest httpServletRequest,
+			final HttpServletResponse httpServletResponse) throws IOException,
+			ServletException {
+		// create the async context, otherwise getAsyncContext() will be null
+		final AsyncContext ctx = httpServletRequest.startAsync();
+		// set the timeout
+		ctx.setTimeout(-1);
+
+		// spawn some task in a background thread
+		executor.execute(new Runnable() {
+			public void run() {
+				try {
+					Action action = getMatchingAction(httpServletRequest);
+					if (action != null) {
+						httpServletResponse.setCharacterEncoding("UTF-8");
+						action.execute(httpServletRequest, httpServletResponse);
+					}
+				} catch (Exception e) {
+					TrackiyaConstants.LOGGER.error(
+							"Error in trackiya servlet", e);
+				}
+				ctx.complete();
+				TrackiyaConstants.LOGGER.info("request finished : "+ httpServletResponse.getCharacterEncoding());
+				TrackiyaConstants.LOGGER.info("request finished : "+ httpServletResponse.getContentType());
+				TrackiyaConstants.LOGGER.info("request finished : "+ httpServletRequest.getRequestURI());
+			}
+		});
+
+	}
+
+	protected Action getMatchingAction(final HttpServletRequest servletRequest)
+			throws ServletException {
+		String contextPath = servletRequest.getRequestURI();
+
+		// Find a destination matching this
+		if (contextPath == null) {
+			TrackiyaConstants.LOGGER.warn("Invalid request URI");
+			throw new ServletException("Invalid context path");
+		}
+		
+		TrackiyaConstants.LOGGER.info("request received for URI "
+				+ contextPath);
+		HttpSession session = servletRequest.getSession();
+		Vehicle vehicle = (Vehicle)session.getAttribute(TrackiyaConstants.VEHICLE);
+		if(vehicle != null)
+			TrackiyaConstants.LOGGER.info("vehicle logged in is "
+					+ vehicle.getId());
+		return actionsMap.get(contextPath);
+	}
+
+	/**
+	 * We are going to perform the same operations for POST requests as for GET
+	 * methods, so this method just sends the request to the doGet method.
+	 */
+	@Override
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		doGet(request, response);
+	}
+
+}

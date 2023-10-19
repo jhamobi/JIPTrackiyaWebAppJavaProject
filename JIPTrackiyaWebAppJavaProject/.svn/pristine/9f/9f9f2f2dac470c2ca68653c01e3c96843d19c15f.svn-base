@@ -1,0 +1,37 @@
+package com.jhamobi.trackiya.client;
+
+public class VehicleRunStatus {
+	private final String mVehicleNum;
+	private final String mVehicleRunningStatus;
+	private final String mVehicleCurrLoc;
+	private final String mVehicleTimeLapsed;
+
+	public VehicleRunStatus(String vehicleNum, String vehicleRunningStatus, String currLoc, String timeLapsed) {
+		this.mVehicleNum = vehicleNum;
+		this.mVehicleRunningStatus = vehicleRunningStatus;
+		this.mVehicleCurrLoc = currLoc;
+		this.mVehicleTimeLapsed = timeLapsed;
+
+	}
+
+	public String getVehicleNum() {
+		return mVehicleNum;
+
+	}
+
+	public String getVehicleRunningStatus() {
+		return mVehicleRunningStatus;
+
+	}
+
+	public String getVehicleCurrLoc() {
+		return mVehicleCurrLoc;
+
+	}
+
+	public String getVehicleTimeLapsed() {
+		return mVehicleTimeLapsed;
+
+	}
+
+}

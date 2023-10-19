@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+              http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         version="2.5"
+         xmlns="http://java.sun.com/xml/ns/javaee">
+         
+    <display-name>Trackiya</display-name>
+	<session-config>
+		<session-timeout>-1</session-timeout>
+	</session-config>
+	<servlet>
+		<servlet-name>trackiyaAppRequest</servlet-name>
+		<servlet-class>com.jhamobi.trackiya.server.tomcat.servlet.TrackiyaServlet</servlet-class>
+		<init-param>
+			<param-name>trackiya-DS</param-name>
+			<param-value>java:comp/env/jdbc/trackiya</param-value>
+		</init-param>
+		<init-param>
+			<param-name>log4j-properties-location</param-name>
+			<param-value>WEB-INF/log4j.properties</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+		<async-supported>true</async-supported>
+	</servlet>
+	<servlet>
+		<servlet-name>vehicleServlet</servlet-name>
+		<servlet-class>com.jhamobi.trackiya.server.tomcat.servlet.VehicleServiceImpl</servlet-class>
+		<init-param>
+			<param-name>trackiya-DS</param-name>
+			<param-value>java:comp/env/jdbc/trackiya</param-value>
+		</init-param>
+		<init-param>
+			<param-name>log4j-properties-location</param-name>
+			<param-value>WEB-INF/log4j.properties</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+		<async-supported>true</async-supported>
+	</servlet>
+	<servlet>
+		<servlet-name>hubServlet</servlet-name>
+		<servlet-class>com.jhamobi.trackiya.server.tomcat.servlet.HubServiceImpl</servlet-class>
+		<init-param>
+			<param-name>trackiya-DS</param-name>
+			<param-value>java:comp/env/jdbc/trackiya</param-value>
+		</init-param>
+		<init-param>
+			<param-name>log4j-properties-location</param-name>
+			<param-value>WEB-INF/log4j.properties</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+		<async-supported>true</async-supported>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>vehicleServlet</servlet-name>
+		<url-pattern>/trackiyawebapp/vehicleService</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>hubServlet</servlet-name>
+		<url-pattern>/trackiyawebapp/hubService</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>trackiyaAppRequest</servlet-name>
+		<url-pattern>/trackiyawebapp/App/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- JDBC Config -->
+	<resource-ref>
+		<description>Trackiya Datasource </description>
+		<res-ref-name>jdbc/trackiya</res-ref-name>
+		<res-type>javax.sql.DataSource</res-type>
+		<res-auth>Container</res-auth>
+	</resource-ref>
+
+	
+<security-constraint>
+    <web-resource-collection>
+        <web-resource-name>secureyobuddy</web-resource-name>
+        <url-pattern>/*</url-pattern>
+    </web-resource-collection>
+    <user-data-constraint>
+    <!-- <transport-guarantee>CONFIDENTIAL</transport-guarantee> -->
+         <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+	</security-constraint>
+
+  <!-- Servlets -->
+  
+  <!-- Default page to serve -->
+  <welcome-file-list>
+    <welcome-file>TrackiyaWebApp.html</welcome-file>
+  </welcome-file-list>
+
+</web-app>

@@ -1,0 +1,495 @@
+package com.jhamobi.trackiya.server.database;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import com.jhamobi.trackiya.client.model.Hub;
+import com.jhamobi.trackiya.client.model.RunningData;
+import com.jhamobi.trackiya.client.model.TrackingData;
+import com.jhamobi.trackiya.client.model.Vehicle;
+import com.jhamobi.trackiya.server.tomcat.TrackiyaConstants;
+
+/**
+ * 
+ * @author majha
+ *
+ */
+public class TrackiyaMySqlDBConnection {
+	private static String MYSQL_URL = "jdbc:mysql://localhost:3306/TrakiyaDB";
+	private static String MYSQL_USERNAME = "yoappadmin";
+	private static String MYSQL_PASSWORD = "yoapppass";
+	
+	public  static final String POOL_NAME = "Trackiya_MySql";
+	
+	private static TrackiyaMySqlDBConnection instance;
+	private TrackiyaDBConnectionManager manager;
+	
+	private TrackiyaMySqlDBConnection(){
+		int maxconn = 10;
+		int retry = 5;
+		
+		manager = TrackiyaDBConnectionManager.getInstance();
+		manager.createPool(POOL_NAME, MYSQL_URL, MYSQL_USERNAME, MYSQL_PASSWORD, maxconn, retry);
+
+	}
+	
+	public synchronized static TrackiyaMySqlDBConnection getInstance(){
+		if(instance == null){
+			instance = new TrackiyaMySqlDBConnection();
+		}
+		return instance;
+	}
+	
+	
+	public List<Vehicle> getVehicles(Connection connection, String hubId) throws Exception{
+		ResultSet rs = null;
+		Hub hub = getHub(connection, hubId);
+		List<Vehicle> vehicles = new ArrayList<Vehicle>();
+		String statement = "SELECT * from " + TrackiyaDBTableColumnNames.VEHICLES_TABLE  +" where " +TrackiyaDBTableColumnNames.HUB +"=?" ;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			boolean execute = getStatement.execute(statement);
+			if(execute){
+				getStatement.setString(1, hubId);
+				rs = getStatement.getResultSet();
+				while(rs != null && rs.next()){
+					Vehicle vehicle = new Vehicle();
+					vehicle.setId(rs.getString(TrackiyaDBTableColumnNames.VEHICLE_ID));
+					vehicle.setType(rs.getString(TrackiyaDBTableColumnNames.VEHICLE_TYPE));
+					vehicle.setNumber(rs.getString(TrackiyaDBTableColumnNames.VEHICLE_NUMBER));
+					vehicle.setDriverName(rs.getString(TrackiyaDBTableColumnNames.DRIVER_NAME));
+					vehicle.setOwnerName(rs.getString(TrackiyaDBTableColumnNames.OWNER_NAME));
+					vehicle.setDriverPhNumber(rs.getString(TrackiyaDBTableColumnNames.DRIVER_MOBILE_NUMBER));
+					vehicle.setOwnerPhoneNumber(rs.getString(TrackiyaDBTableColumnNames.OWNER_MOBILE_NUMBER));
+					vehicle.setRateAbove1500Km(rs.getString(TrackiyaDBTableColumnNames.RATE_ABOVE_1500_KM));
+					vehicle.setRateWithin1500Km(rs.getString(TrackiyaDBTableColumnNames.RATE_WITHIN_1500_KM));
+					vehicle.setRateWithin12Hrs(rs.getString(TrackiyaDBTableColumnNames.RATE_WITHIN_12_HRS));
+					vehicle.setRateAbove12Hrs(rs.getString(TrackiyaDBTableColumnNames.RATE_ABOVE_12_HRS));
+					vehicle.setHub(hub);
+					vehicles.add(vehicle);
+				}
+			}
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+		return vehicles;
+	}
+	
+	public Vehicle getVehicle(Connection connection, String vehicleId) throws SQLException{
+		ResultSet rs = null;
+		Vehicle vehicle = null;
+		String hubId = null;
+		String statement = "SELECT * from " + TrackiyaDBTableColumnNames.VEHICLES_TABLE +" where " +TrackiyaDBTableColumnNames.VEHICLE_ID +"=?" ;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, vehicleId);
+			boolean execute = getStatement.execute(statement);
+			if(execute){
+				rs = getStatement.getResultSet();
+				if(rs != null && rs.next()){
+					vehicle = new Vehicle();
+					vehicle.setId(rs.getString(TrackiyaDBTableColumnNames.VEHICLE_ID));
+					vehicle.setType(rs.getString(TrackiyaDBTableColumnNames.VEHICLE_TYPE));
+					vehicle.setNumber(rs.getString(TrackiyaDBTableColumnNames.VEHICLE_NUMBER));
+					vehicle.setDriverName(rs.getString(TrackiyaDBTableColumnNames.DRIVER_NAME));
+					vehicle.setOwnerName(rs.getString(TrackiyaDBTableColumnNames.OWNER_NAME));
+					vehicle.setDriverPhNumber(rs.getString(TrackiyaDBTableColumnNames.DRIVER_MOBILE_NUMBER));
+					vehicle.setOwnerPhoneNumber(rs.getString(TrackiyaDBTableColumnNames.OWNER_MOBILE_NUMBER));
+					vehicle.setRateAbove1500Km(rs.getString(TrackiyaDBTableColumnNames.RATE_ABOVE_1500_KM));
+					vehicle.setRateWithin1500Km(rs.getString(TrackiyaDBTableColumnNames.RATE_WITHIN_1500_KM));
+					vehicle.setRateWithin12Hrs(rs.getString(TrackiyaDBTableColumnNames.RATE_WITHIN_12_HRS));
+					vehicle.setRateAbove12Hrs(rs.getString(TrackiyaDBTableColumnNames.RATE_ABOVE_12_HRS));
+					hubId = rs.getString(TrackiyaDBTableColumnNames.HUB);
+				}
+			}
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+		if(hubId != null){
+			Hub hub = getHub(connection, hubId);
+			vehicle.setHub(hub);
+		}
+		return vehicle;
+	}
+	
+	public Hub getHub(Connection connection, String hubId) throws SQLException{
+		ResultSet rs = null;
+		Hub hub = null;
+		String statement = "SELECT * from " + TrackiyaDBTableColumnNames.HUBS_TABLE +" where " +TrackiyaDBTableColumnNames.HUB_ID +"=?" ;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, hubId);
+			boolean execute = getStatement.execute(statement);
+			if(execute){
+				rs = getStatement.getResultSet();
+				if(rs != null && rs.next()){
+					hub = new Hub();
+					hub.setId(rs.getString(TrackiyaDBTableColumnNames.HUB_ID));
+					hub.setLatitute(rs.getDouble(TrackiyaDBTableColumnNames.LATITUTE));
+					hub.setLongitude(rs.getDouble(TrackiyaDBTableColumnNames.LONGITUDE));
+					hub.setName(rs.getString(TrackiyaDBTableColumnNames.HUB_NAME));
+				}
+			}
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+		return hub;
+	}
+	
+	public List<Hub> getHubs(Connection connection) throws SQLException{
+		ResultSet rs = null;
+		List<Hub> hubs = new ArrayList<Hub>();
+		String statement = "SELECT * from " + TrackiyaDBTableColumnNames.HUBS_TABLE ;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			boolean execute = getStatement.execute(statement);
+			if(execute){
+				rs = getStatement.getResultSet();
+				while(rs != null && rs.next()){
+					Hub hub = new Hub();
+					hub.setId(rs.getString(TrackiyaDBTableColumnNames.HUB_ID));
+					hub.setLatitute(rs.getDouble(TrackiyaDBTableColumnNames.LATITUTE));
+					hub.setLongitude(rs.getDouble(TrackiyaDBTableColumnNames.LONGITUDE));
+					hub.setName(rs.getString(TrackiyaDBTableColumnNames.HUB_NAME));
+					hubs.add(hub);
+				}
+			}
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+		return hubs;
+	}
+	
+	public void addHub(Connection connection, Hub hub) throws SQLException{
+		ResultSet rs = null;
+		String values = " values(?,?,?,?)";
+		String statement = "INSERT INTO " + TrackiyaDBTableColumnNames.HUBS_TABLE + values;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, hub.getId());
+			getStatement.setString(2, hub.getName());
+			getStatement.setDouble(3, hub.getLatitute());
+			getStatement.setDouble(4, hub.getLongitude());
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+	public void addVehicle(Connection connection, Vehicle vehicle) throws SQLException{
+		ResultSet rs = null;
+		String values = " values(?,?,?,?,?,?,?,?,?,?,?,?)";
+		String statement = "INSERT INTO " + TrackiyaDBTableColumnNames.VEHICLES_TABLE + values;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, vehicle.getId());
+			getStatement.setString(2, vehicle.getType());
+			getStatement.setString(3, vehicle.getNumber());
+			getStatement.setString(4, vehicle.getDriverName());
+			getStatement.setString(5, vehicle.getOwnerName());
+			getStatement.setString(6, vehicle.getDriverPhNumber());
+			getStatement.setString(7, vehicle.getOwnerPhoneNumber());
+			getStatement.setString(8, vehicle.getHub().getId());
+			getStatement.setString(9, vehicle.getRateAbove1500Km());
+			getStatement.setString(10, vehicle.getRateWithin1500Km());
+			getStatement.setString(11, vehicle.getRateAbove12Hrs());
+			getStatement.setString(12, vehicle.getRateWithin12Hrs());
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+	public TrackingData getTrackingdata(Connection connection, String vehicleId) throws SQLException{
+		ResultSet rs = null;
+		TrackingData trackingData = null;
+		String statement = "SELECT * from " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE +" where " +TrackiyaDBTableColumnNames.VEHICLE_ID +"=?" ;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, vehicleId);
+			boolean execute = getStatement.execute(statement);
+			if(execute){
+				rs = getStatement.getResultSet();
+				if(rs != null && rs.next()){
+					trackingData = new TrackingData();
+					trackingData.setDate(rs.getString(TrackiyaDBTableColumnNames.DATE));
+					trackingData.setReportTime(rs.getString(TrackiyaDBTableColumnNames.REPORT_TIME));
+					trackingData.setReleasetime(rs.getString(TrackiyaDBTableColumnNames.RELEASE_TIME));
+					trackingData.setEndTime(rs.getString(TrackiyaDBTableColumnNames.END_TIME));
+					trackingData.setStartTime(rs.getString(TrackiyaDBTableColumnNames.START_TIME));
+					
+					RunningData runningData = new RunningData();
+					runningData.setCurrentAddress(rs.getString(TrackiyaDBTableColumnNames.ADDRESS));
+					runningData.setDistanceTravelled(rs.getString(TrackiyaDBTableColumnNames.DISTANCE_TRAVELLED));
+					runningData.setLatitute(rs.getDouble(TrackiyaDBTableColumnNames.LATITUTE));
+					runningData.setLongitude(rs.getDouble(TrackiyaDBTableColumnNames.LONGITUDE));
+					runningData.setTimeTravelled(rs.getString(TrackiyaDBTableColumnNames.TIME_TRAVELLED));
+					runningData.setTime(rs.getString(TrackiyaDBTableColumnNames.TIME));
+					int breakDownInt = rs.getInt(TrackiyaDBTableColumnNames.BREAK_DOWN);
+					boolean isBreakDown = (breakDownInt == 1)?true:false;
+					runningData.setBreakDown(isBreakDown);
+					
+					int runningInt = rs.getInt(TrackiyaDBTableColumnNames.RUNNING_STATUS);
+					boolean isRunning = (runningInt == 1)?true:false;
+					runningData.setRunning(isRunning);
+					
+					trackingData.setRunningData(runningData);
+				}
+			}
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+
+		return trackingData;
+	}
+	
+	public RunningData getRunningData(Connection connection, String vehicleId) throws SQLException{
+		ResultSet rs = null;
+		RunningData runningData  = null;
+		String statement = "SELECT * from " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE +" where " +TrackiyaDBTableColumnNames.VEHICLE_ID +"=?" ;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, vehicleId);
+			boolean execute = getStatement.execute(statement);
+			if(execute){
+				rs = getStatement.getResultSet();
+				if(rs != null && rs.next()){
+					runningData = new RunningData();
+					runningData.setCurrentAddress(rs.getString(TrackiyaDBTableColumnNames.ADDRESS));
+					runningData.setDistanceTravelled(rs.getString(TrackiyaDBTableColumnNames.DISTANCE_TRAVELLED));
+					runningData.setLatitute(rs.getDouble(TrackiyaDBTableColumnNames.LATITUTE));
+					runningData.setLongitude(rs.getDouble(TrackiyaDBTableColumnNames.LONGITUDE));
+					runningData.setTimeTravelled(rs.getString(TrackiyaDBTableColumnNames.TIME_TRAVELLED));
+					runningData.setTime(rs.getString(TrackiyaDBTableColumnNames.TIME));
+					int breakDownInt = rs.getInt(TrackiyaDBTableColumnNames.BREAK_DOWN);
+					boolean isBreakDown = (breakDownInt == 1)?true:false;
+					runningData.setBreakDown(isBreakDown);
+					
+					int runningInt = rs.getInt(TrackiyaDBTableColumnNames.RUNNING_STATUS);
+					boolean isRunning = (runningInt == 1)?true:false;
+					runningData.setRunning(isRunning);
+				}
+			}
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+
+		return runningData;
+	}
+	
+	
+	public void insertReportTime(Connection connection, String vehicleId, String time) throws SQLException{
+		Vehicle vehicle = getVehicle(connection, vehicleId);
+		Hub hub = getHub(connection, vehicle.getHub().getId());
+		ResultSet rs = null;
+		String values = " values(?,?,?)";
+		String statement = "INSERT INTO " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE + values;
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+			Calendar cal = Calendar.getInstance();
+			String date = dateFormat.format(cal.getTime());
+			getStatement.setString(1, vehicleId);
+			getStatement.setString(2, date);
+			getStatement.setString(3, time);
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+		
+		insertLongitudeAndLatitude(connection, vehicleId, hub.getLongitude(), hub.getLatitute());
+	}
+	
+	public boolean isReportTimeInsertedForToday(Connection connection, String vehicleId) throws SQLException{
+		boolean exist = false;
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+		Calendar cal = Calendar.getInstance();
+		String date = dateFormat.format(cal.getTime());
+		String statement = "Select COUNT("
+				+ TrackiyaDBTableColumnNames.VEHICLE_ID + ") AS rowcount From "
+				+ TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE
+				+ " Where " + TrackiyaDBTableColumnNames.VEHICLE_ID + "=? AND "
+				+ TrackiyaDBTableColumnNames.DATE + "=?";
+		ResultSet resultSet = null;
+		PreparedStatement countUser = connection.prepareStatement(statement);
+		try {
+			countUser.setString(1, vehicleId);
+			countUser.setString(2, date);
+			boolean execute = countUser.execute();
+			if (execute) {
+				resultSet = countUser.getResultSet();
+				if (resultSet != null && resultSet.next()) {
+					int count = resultSet.getInt("rowcount");
+					exist = (count > 0);
+				}
+			}
+		} finally {
+			if (resultSet != null)
+				resultSet.close();
+			countUser.close();
+		}	
+
+		return exist;
+	}
+	
+	public void insertStartTime(Connection connection, String vehicleId, String time) throws SQLException{
+		ResultSet rs = null;
+		String setStatement = TrackiyaDBTableColumnNames.START_TIME+"=?";
+		String statement = "UPDATE " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE + " SET "+ setStatement+ " WHERE "+TrackiyaDBTableColumnNames.VEHICLE_ID+"=?";
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, time);
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+	public void insertEndTime(Connection connection, String vehicleId, String time) throws SQLException{
+		ResultSet rs = null;
+		String setStatement = TrackiyaDBTableColumnNames.END_TIME+"=?";
+		String statement = "UPDATE " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE + " SET "+ setStatement+ " WHERE "+TrackiyaDBTableColumnNames.VEHICLE_ID+"=?";
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, time);
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+	public void insertReleaseTime(Connection connection, String vehicleId, String time) throws SQLException{
+		ResultSet rs = null;
+		String setStatement = TrackiyaDBTableColumnNames.RELEASE_TIME+"=?";
+		String statement = "UPDATE " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE + " SET "+ setStatement+ " WHERE "+TrackiyaDBTableColumnNames.VEHICLE_ID+"=?";
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setString(1, time);
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+	public void insertBreakDown(Connection connection, String vehicleId, int breakDown) throws SQLException{
+		ResultSet rs = null;
+		String setStatement = TrackiyaDBTableColumnNames.BREAK_DOWN+"=?";
+		String statement = "UPDATE " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE + " SET "+ setStatement+ " WHERE "+TrackiyaDBTableColumnNames.VEHICLE_ID+"=?";
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setInt(1, breakDown);
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+	public void insertRunningStatus(Connection connection, String vehicleId, int running) throws SQLException{
+		ResultSet rs = null;
+		String setStatement = TrackiyaDBTableColumnNames.RUNNING_STATUS+"=?";
+		String statement = "UPDATE " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE + " SET "+ setStatement+ " WHERE "+TrackiyaDBTableColumnNames.VEHICLE_ID+"=?";
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setInt(1, running);
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+	public void updateRunningData(Connection connection, String vehicleId, RunningData data) throws SQLException{
+		ResultSet rs = null;
+		String setStatement = TrackiyaDBTableColumnNames.LONGITUDE + "=? "
+				+ TrackiyaDBTableColumnNames.LATITUTE + "=? "
+				+ TrackiyaDBTableColumnNames.DISTANCE_TRAVELLED + "=? "
+				+ TrackiyaDBTableColumnNames.TIME_TRAVELLED + "=? "
+				+ TrackiyaDBTableColumnNames.TIME + "=? "
+				+TrackiyaDBTableColumnNames.ADDRESS+"=? "
+				+TrackiyaDBTableColumnNames.BREAK_DOWN+"=? "
+				+TrackiyaDBTableColumnNames.RUNNING_STATUS+"=?";
+		String statement = "UPDATE " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE + " SET "+ setStatement+ " WHERE "+TrackiyaDBTableColumnNames.VEHICLE_ID+"=?";
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setDouble(1, data.getLongitude());
+			getStatement.setDouble(2, data.getLatitute());
+			getStatement.setString(3, data.getDistanceTravelled());
+			getStatement.setString(4, data.getTimeTravelled());
+			getStatement.setString(5, data.getTime());
+			getStatement.setString(6, data.getCurrentAddress());
+			int breakDownInt = data.isBreakDown()? 1:0;
+			getStatement.setInt(7, breakDownInt);
+			int runningInt = data.isRunning()? 1:0;
+			getStatement.setInt(8, runningInt);
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+	public void insertLongitudeAndLatitude(Connection connection, String vehicleId, double longitude, double latitude) throws SQLException{
+		ResultSet rs = null;
+		String setStatement = TrackiyaDBTableColumnNames.LONGITUDE+"=? "+TrackiyaDBTableColumnNames.LATITUTE+"=?";
+		String statement = "UPDATE " + TrackiyaDBTableColumnNames.VEHICLE_RUNNING_DATA_TABLE + " SET "+ setStatement+ " WHERE "+TrackiyaDBTableColumnNames.VEHICLE_ID+"=?";
+		PreparedStatement getStatement =  connection.prepareStatement(statement);
+		try {
+			getStatement.setDouble(1, longitude);
+			getStatement.setDouble(2, latitude);
+			getStatement.execute(statement);
+		} finally{
+			if(rs != null)
+				rs.close();
+			getStatement.close();
+		}
+	}
+	
+
+	public synchronized Connection getDBConnection() throws Exception{
+		Connection connection = manager.getConnection(POOL_NAME);
+		return connection;
+	}
+	
+	public synchronized void closeDBConnection(Connection connection){
+		try {
+			manager.freeConnection(POOL_NAME, connection);
+		} catch (SQLException e) {
+			TrackiyaConstants.LOGGER.error("error while closing db connection", e);
+		}
+	}
+}

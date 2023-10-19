@@ -1,0 +1,15 @@
+package com.jhamobi.trackiya.client;
+
+public class DailyReport {
+	private final String mReportDate;
+
+	public DailyReport(String reportDate) {
+		this.mReportDate = reportDate;
+	}
+	
+	public String getReportDate(){
+		return mReportDate;
+		
+	}
+
+}

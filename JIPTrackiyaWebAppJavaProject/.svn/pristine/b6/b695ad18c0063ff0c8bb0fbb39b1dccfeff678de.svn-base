@@ -1,0 +1,63 @@
+package com.jhamobi.trackiya.client;
+
+import java.util.Arrays;
+import java.util.List;
+
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
+
+public class HubListWebPage {
+
+	public HubListWebPage() {
+	}
+
+	public CellTable<HubDetail> InitHubListWebPage() {
+
+		final List<HubDetail> HubList = Arrays.asList(new HubDetail("hubid001", "Vimannagar Hub",
+				"Somnath Nagar , Behind In-Orbit Mall, Near Bora Classes. Wadgaon Sheri"));
+
+		// Create a CellTable.
+		CellTable<HubDetail> table = new CellTable<HubDetail>();
+		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
+
+		// Add a text column to show the name.
+		TextColumn<HubDetail> hubId = new TextColumn<HubDetail>() {
+			@Override
+			public String getValue(HubDetail object) {
+				return object.getHubId();
+			}
+		};
+		table.addColumn(hubId, "Hub Id");
+
+		// Add a text column to show the name.
+		TextColumn<HubDetail> hubName = new TextColumn<HubDetail>() {
+			@Override
+			public String getValue(HubDetail object) {
+				return object.getHubName();
+			}
+		};
+		table.addColumn(hubName, "Hub Name");
+
+		TextColumn<HubDetail> hubAddress = new TextColumn<HubDetail>() {
+			@Override
+			public String getValue(HubDetail object) {
+				return object.getHubAddress();
+			}
+		};
+		table.addColumn(hubAddress, "Hub Address");
+
+		// Set the total row count. This isn't strictly necessary, but it
+		// affects
+		// paging calculations, so its good habit to keep the row count up to
+		// date.
+		table.setRowCount(HubList.size(), true);
+
+		// Push the data into the widget.
+		table.setRowData(0, HubList);
+
+		return table;
+
+	}
+
+}

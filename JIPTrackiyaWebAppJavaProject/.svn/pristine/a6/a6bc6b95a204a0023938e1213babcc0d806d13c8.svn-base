@@ -1,0 +1,175 @@
+package com.jhamobi.trackiya.client;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.TabPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.jhamobi.trackiya.client.VehicleDetail;
+import com.jhamobi.trackiya.client.model.Hub;
+import com.jhamobi.trackiya.client.model.Vehicle;
+import com.jhamobi.trackiya.client.service.HubServiceClientImpl;
+import com.jhamobi.trackiya.client.service.VehicleServiceClientImpl;
+
+/**
+ * Entry point classes define <code>onModuleLoad()</code>.
+ */
+public class TrackiyaWebApp implements EntryPoint {
+
+	public static final Map<String, Hub> hubsMap = new HashMap<String, Hub>();
+	public static final List<Vehicle> vehicleList = new ArrayList<Vehicle>();
+	public static final List<Vehicle> vehicleRunList = new ArrayList<Vehicle>();
+	private HubListWebPage hubListWebPage;
+	private VehicleListWebPage vehicleListWebPage;
+	private VehicleRunStatusWebPage vehicleRunStatusWebPage;
+
+	public TrackiyaWebApp() {
+	}
+
+	public void onModuleLoad() {
+		InitView();
+		HubServiceClientImpl hubService = new HubServiceClientImpl(GWT.getModuleBaseURL() + "hubService");
+		VehicleServiceClientImpl vehicleService = new VehicleServiceClientImpl(GWT.getModuleBaseURL()
+				+ "vehicleService");
+
+		try {
+			hubService.getAllHubs(new GetAllHubsServiceCallback());
+			vehicleService.fetchAllVehicles(new GetAllVehiclesServiceCallback());
+			vehicleService.fetchAllVehiclesTrackingData(new GetAllVehicleTrackingDataServiceCallback());
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	void InitView() {
+		// Create a tab panel
+		TabPanel tabPanel = new TabPanel();
+		tabPanel.setWidth("80%");
+		tabPanel.setHeight("100%");
+		tabPanel.setTitle("Trackiya");
+
+		tabPanel.getElement().setAttribute("align", "center");
+
+		// Unlike most widgets, animations are disabled by default
+		tabPanel.getDeckPanel().setAnimationEnabled(true);
+
+		// Add a home tab
+		tabPanel.add(InitVehicleRunningStatusWebPage(), "Vehicle Running Status");
+
+		// Add a home tab
+		tabPanel.add(InitVehicleListWebPage(), "Vehicle List");
+
+		tabPanel.add(InitHubListWebPage(), "Hub List");
+
+		tabPanel.add(InitHubRegistrationWebPage(), "Hub Registration");
+
+		// Add a tab with an image
+		tabPanel.add(InitVehicleRegistrationWebPage(), "Vehicle Registration");
+
+		// Add a tab
+		tabPanel.add(InitReportsWebPage(), "Reports");
+
+		// Return the content
+		tabPanel.selectTab(0);
+		tabPanel.ensureDebugId("cwTabPanel");
+
+		RootPanel.get().add(tabPanel);
+	}
+
+	private CellTable<VehicleRunStatus> InitVehicleRunningStatusWebPage() {
+		vehicleRunStatusWebPage = new VehicleRunStatusWebPage();
+		return vehicleRunStatusWebPage.InitVehicleRunStatusWebPage();
+	}
+
+	private CellTable<VehicleDetail> InitVehicleListWebPage() {
+		vehicleListWebPage = new VehicleListWebPage();
+		return vehicleListWebPage.InitVehicleListWebPage();
+	}
+
+	private CellTable<HubDetail> InitHubListWebPage() {
+		hubListWebPage = new HubListWebPage();
+		return hubListWebPage.InitHubListWebPage();
+	}
+
+	private VerticalPanel InitHubRegistrationWebPage() {
+		HubRegWebPage r = new HubRegWebPage();
+		return r.InitHubRegistrationWebPage();
+	}
+
+	private VerticalPanel InitVehicleRegistrationWebPage() {
+		VehicleRegWebPage r = new VehicleRegWebPage();
+		return r.InitVehicleRegistrationWebPage();
+	}
+
+	private FlexTable InitReportsWebPage() {
+		ReportWebPage r = new ReportWebPage();
+		return r.InitReportsWebPage();
+	}
+
+	public class GetAllHubsServiceCallback implements AsyncCallback<List<Hub>> {
+
+		@Override
+		public void onFailure(Throwable caught) {
+			Window.alert("Server Exception: " + caught.getMessage());
+		}
+
+		@Override
+		public void onSuccess(List<Hub> result) {
+			for (Hub hub : result) {
+				hubsMap.put(hub.getId(), hub);
+			}
+			
+			if(hubListWebPage != null)
+				hubListWebPage.refreshData();
+
+		}
+	}
+
+	public class GetAllVehiclesServiceCallback implements AsyncCallback<List<Vehicle>> {
+
+		@Override
+		public void onFailure(Throwable caught) {
+			Window.alert("Server Exception: " + caught.getMessage());
+		}
+
+		@Override
+		public void onSuccess(List<Vehicle> result) {
+			for (Vehicle vehicle : result) {
+				vehicleList.add(vehicle);
+			}
+			
+			if(vehicleListWebPage != null)
+				vehicleListWebPage.refreshData();
+
+		}
+	}
+
+	public class GetAllVehicleTrackingDataServiceCallback implements AsyncCallback<List<Vehicle>> {
+
+		@Override
+		public void onFailure(Throwable caught) {
+			Window.alert("Server Exception: " + caught.getMessage());
+		}
+
+		@Override
+		public void onSuccess(List<Vehicle> result) {
+			for (Vehicle vehicle : result) {
+				vehicleRunList.add(vehicle);
+			}
+			if(vehicleRunStatusWebPage != null)
+				vehicleRunStatusWebPage.refreshData();
+		}
+	}
+}

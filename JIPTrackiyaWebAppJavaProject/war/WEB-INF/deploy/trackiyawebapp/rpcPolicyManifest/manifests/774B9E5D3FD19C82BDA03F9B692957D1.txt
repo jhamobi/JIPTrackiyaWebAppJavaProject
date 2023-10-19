@@ -1,0 +1,2 @@
+serviceClass: com.jhamobi.trackiya.client.service.ReportService
+path: 53E1D2F3E4C89A29040E5B203BC32152.gwt.rpc

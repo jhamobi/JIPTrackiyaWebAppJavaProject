@@ -1,0 +1,116 @@
+package com.jhamobi.trackiya.client;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
+import com.jhamobi.trackiya.client.model.Hub;
+
+import static com.jhamobi.trackiya.client.TrackiyaWebApp.hubsMap;
+
+public class HubListWebPage {
+	CellTable<HubDetail> table;
+	List<HubDetail> hubList;
+
+	public HubListWebPage() {
+	}
+
+	public CellTable<HubDetail> InitHubListWebPage() {
+		hubList = new ArrayList<HubDetail>();
+		if (hubsMap != null) {
+			Collection<Hub> values = hubsMap.values();
+			for (Hub hub : values) {
+				HubDetail hubDetail = new HubDetail(hub.getId(), hub.getName(), hub.getCity(), hub.getZone(),hub.getAddress());
+				hubList.add(hubDetail);
+			}
+		}
+
+		// Create a CellTable.
+		table = new CellTable<HubDetail>();
+		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
+
+		// Add a text column to show the name.
+		TextColumn<HubDetail> hubId = new TextColumn<HubDetail>() {
+			@Override
+			public String getValue(HubDetail object) {
+				return object.getHubId();
+			}
+		};
+		table.addColumn(hubId, "Hub Id");
+
+		// Add a text column to show the name.
+		TextColumn<HubDetail> hubName = new TextColumn<HubDetail>() {
+			@Override
+			public String getValue(HubDetail object) {
+				return object.getHubName();
+			}
+		};
+		table.addColumn(hubName, "Hub Name");
+
+		TextColumn<HubDetail> hubCity = new TextColumn<HubDetail>() {
+			@Override
+			public String getValue(HubDetail object) {
+				return object.getHubCity();
+			}
+		};
+		table.addColumn(hubCity, "Hub City");
+
+		TextColumn<HubDetail> hubZone = new TextColumn<HubDetail>() {
+			@Override
+			public String getValue(HubDetail object) {
+				return object.getHubZone();
+			}
+		};
+		table.addColumn(hubZone, "Hub Zone");
+
+		TextColumn<HubDetail> hubAddress = new TextColumn<HubDetail>() {
+			@Override
+			public String getValue(HubDetail object) {
+				return object.getHubAddress();
+			}
+		};
+		table.addColumn(hubAddress, "Hub Address");
+
+		// Set the total row count. This isn't strictly necessary, but it
+		// affects
+		// paging calculations, so its good habit to keep the row count up to
+		// date.
+		table.setRowCount(hubList.size(), true);
+
+		// Push the data into the widget.
+		table.setRowData(0, hubList);
+
+		return table;
+
+	}
+
+	public void AddHubDetail(HubDetail hubDetail) {
+
+		HubDetail newHub = new HubDetail(hubDetail.getHubId(), hubDetail.getHubName(), hubDetail.getHubCity(),
+				hubDetail.getHubZone(), hubDetail.getHubAddress());
+
+		hubList.add(newHub);
+
+		return;
+
+	}
+	
+	public void refreshData() {
+		if (hubsMap != null) {
+			hubList = new ArrayList<HubDetail>();
+			Collection<Hub> values = hubsMap.values();
+			for (Hub hub : values) {
+				HubDetail hubDetail = new HubDetail(hub.getId(), hub.getName(), hub.getCity(), hub.getZone(),hub.getAddress());
+				hubList.add(hubDetail);
+			}
+			table.setRowCount(hubList.size(), true);
+
+			// Push the data into the widget.
+			table.setRowData(0, hubList);
+		}
+		return;
+	}
+}

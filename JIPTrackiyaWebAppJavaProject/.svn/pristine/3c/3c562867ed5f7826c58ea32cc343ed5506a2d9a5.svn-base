@@ -1,0 +1,82 @@
+package com.jhamobi.trackiya.client.service;
+
+import java.util.List;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.rpc.ServiceDefTarget;
+import com.jhamobi.trackiya.client.model.Hub;
+import com.jhamobi.trackiya.client.model.RunningData;
+import com.jhamobi.trackiya.client.model.TrackingData;
+import com.jhamobi.trackiya.client.model.Vehicle;
+
+public class VehicleServiceClientImpl implements VehicleServiceClientInt {
+	
+	private VehicleServiceAsync service;
+
+	public VehicleServiceClientImpl(String url) {
+
+		this.service = GWT.create(VehicleService.class);
+		ServiceDefTarget serviceDef = (ServiceDefTarget) service;
+		serviceDef.setServiceEntryPoint(url);
+		
+	}
+
+	@Override
+	public void addVehicle(Vehicle vehicle) throws Exception {
+		this.service.addVehicle(vehicle, new AddVehicleServiceCallback());		
+	}
+	
+	@Override
+	public Hub getHub(String hubId) throws Exception {
+		this.service.getHub(hubId, new GetHubServiceCallback());
+		return null;		
+	}
+
+	@Override
+	public List<Vehicle> fetchVehiclesWithTrackingData(String vehicleId) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public RunningData fetchRunningDataForVehicle(String vehicleId) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public TrackingData fetchTrackingDataForVehicle(String vehicleId) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	public class AddVehicleServiceCallback implements AsyncCallback<Void> {
+
+		@Override
+		public void onFailure(Throwable caught) {
+			Window.alert("Server Exception: " + caught.getMessage());
+		}
+
+		@Override
+		public void onSuccess(Void result) {
+			Window.alert("Vehicle Successfully added");
+		}
+
+	}
+	
+	public class GetHubServiceCallback implements AsyncCallback<Hub> {
+
+		@Override
+		public void onFailure(Throwable caught) {
+			Window.alert("Server Exception: " + caught.getMessage());
+		}
+
+		@Override
+		public void onSuccess(Hub result) {
+		}
+
+	}
+
+}

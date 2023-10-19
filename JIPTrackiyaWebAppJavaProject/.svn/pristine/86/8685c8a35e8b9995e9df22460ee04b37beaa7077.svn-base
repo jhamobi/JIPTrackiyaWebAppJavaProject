@@ -1,0 +1,37 @@
+package com.jhamobi.trackiya.client;
+
+public class HubDetail {
+	private String mHubId;
+	private String mHubName;
+	private String mHubAddress;
+
+	public HubDetail(String hubId, String hubName, String hubAddress) {
+		this.mHubId = hubId;
+		this.mHubName = hubName;
+		this.mHubAddress = hubAddress;
+	}
+
+	public String getHubId() {
+		return mHubId;
+	}
+
+	public void setHubId(String hubId) {
+		mHubId = hubId;
+	}
+	
+	public String getHubName() {
+		return mHubName;
+	}
+
+	public void setHubName(String hubName) {
+		mHubName = hubName;
+	}
+
+	public String getHubAddress() {
+		return mHubAddress;
+	}
+
+	public void setHubAddress(String hubAddress) {
+		mHubAddress = hubAddress;
+	}
+}

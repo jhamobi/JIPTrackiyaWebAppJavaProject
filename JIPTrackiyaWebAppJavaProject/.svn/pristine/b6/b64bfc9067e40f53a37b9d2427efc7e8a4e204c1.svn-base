@@ -1,0 +1,25 @@
+package com.jhamobi.trackiya.server.tomcat.action;
+
+/**
+ * 
+ * @author majha
+ *
+ */
+public enum ActionPath {
+	UPDATE_VEHICLE_STATE("/trackiyawebapp/App/setState"),
+	UPDATE_RUNNING_DATA("/trackiyawebapp/App/updateRunningData"),
+	BREAK_DOWN_ACTION("/trackiyawebapp/App/setBreakDown"),
+	LOGIN_ACTION("/trackiyawebapp/App/login"),
+	RELOGIN_ACTION("/trackiyawebapp/App/relogin");
+  
+  
+  private String path;
+  private ActionPath(String path){
+	  this.path = path;
+  }
+  
+  public String getPath() {
+	return path;
+  }
+  
+}

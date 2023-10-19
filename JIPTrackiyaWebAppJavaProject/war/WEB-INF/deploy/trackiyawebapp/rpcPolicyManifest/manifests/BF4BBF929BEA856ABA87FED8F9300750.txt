@@ -1,0 +1,2 @@
+serviceClass: com.jhamobi.trackiya.client.service.VehicleService
+path: 7FCEC6391506D5C0DA04685A282EE3AE.gwt.rpc

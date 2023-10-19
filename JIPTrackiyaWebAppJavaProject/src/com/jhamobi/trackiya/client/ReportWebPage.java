@@ -1,0 +1,411 @@
+package com.jhamobi.trackiya.client;
+
+import java.util.Date;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style.FontWeight;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DecoratorPanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;
+import com.google.gwt.user.datepicker.client.DatePicker;
+import com.jhamobi.trackiya.client.service.ReportServiceClientImpl;
+
+public class ReportWebPage {
+	public static final int FIRST_COLUMN = 0;
+	public static final int SECOND_COLUMN = 1;
+
+	public ReportWebPage() {
+	}
+
+	public FlexTable InitReportsWebPage() {
+
+		FlexTable ftReports = new FlexTable();
+		ftReports.setCellSpacing(6);
+		FlexCellFormatter cellFormatter = ftReports.getFlexCellFormatter();
+
+		ftReports.setWidget(0, 0, InitVehicleNumPanel());
+		ftReports.setWidget(1, 0, InitDailyReportPanel());
+		ftReports.setWidget(2, 0, InitMonthlyReportPanel());
+		ftReports.setWidget(3, 0, InitInvoiceReportPanel());
+
+		// DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+		// Calendar cal = Calendar.getInstance();
+		//
+		// String todayDate = dateFormat.format(cal.getTime());
+
+		ftReports.setWidget(0, 1, ShowDailyReport());
+		cellFormatter.setRowSpan(0, 1, 4);
+		cellFormatter.setVerticalAlignment(0, 1, HasVerticalAlignment.ALIGN_MIDDLE);
+		cellFormatter.setHorizontalAlignment(0, 1, HasHorizontalAlignment.ALIGN_LEFT);
+
+		return ftReports;
+
+	}
+
+	private DecoratorPanel InitVehicleNumPanel() {
+		FlexTable layout = new FlexTable();
+		layout.setCellSpacing(6);
+
+		// Add a title to the form
+		layout.setHTML(0, 0, "Vehicle No. :");
+		layout.setWidget(0, 1, new TextBox());
+
+		// Wrap the content in a DecoratorPanel
+		DecoratorPanel decPanel = new DecoratorPanel();
+		decPanel.setWidth("300px");
+		decPanel.setWidget(layout);
+		return decPanel;
+	}
+
+	private DecoratorPanel InitDailyReportPanel() {
+		FlexTable layout = new FlexTable();
+		layout.setCellSpacing(6);
+		FlexCellFormatter cellFormatter = layout.getFlexCellFormatter();
+
+		// Add a title to the form
+		layout.setHTML(0, 0, "Daily Report");
+		cellFormatter.setColSpan(0, 0, 2);
+		cellFormatter.setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+
+		// Add some standard form options
+		layout.setHTML(1, 0, "Report date:");
+		final TextBox tbReportDate = new TextBox();
+		tbReportDate.setWidth("100px");
+		layout.setWidget(1, 1, tbReportDate);
+		Button bShowReport = new Button("Show");
+		layout.setWidget(1, 2, bShowReport);
+
+		bShowReport.addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				ShowDailyReport();
+			}
+
+		});
+
+		DatePicker datePicker = new DatePicker();
+
+		// Set the value in the text box when the user selects a date
+		datePicker.addValueChangeHandler(new ValueChangeHandler<Date>() {
+			public void onValueChange(ValueChangeEvent<Date> event) {
+				Date date = event.getValue();
+				String dateString = DateTimeFormat.getMediumDateFormat().format(date);
+				tbReportDate.setText(dateString);
+			}
+		});
+
+		// Set the default value
+		datePicker.setValue(new Date(), true);
+		layout.setWidget(2, 0, datePicker);
+		cellFormatter.setColSpan(2, 0, 3);
+		cellFormatter.setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
+
+		// Wrap the content in a DecoratorPanel
+		DecoratorPanel decPanel = new DecoratorPanel();
+		decPanel.setWidth("300px");
+		decPanel.setWidget(layout);
+		return decPanel;
+	}
+
+	private DecoratorPanel InitMonthlyReportPanel() {
+		FlexTable layout = new FlexTable();
+		layout.setCellSpacing(6);
+		FlexCellFormatter cellFormatter = layout.getFlexCellFormatter();
+
+		// Add a title to the form
+		layout.setHTML(0, 0, "Monthly Report");
+		cellFormatter.setColSpan(0, 0, 2);
+		cellFormatter.setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+
+		// Add some standard form options
+		layout.setHTML(1, 0, "Report month:");
+		layout.setWidget(1, 1, ShowMonthForReport());
+		Button bShowReport = new Button("Show");
+		layout.setWidget(1, 2, bShowReport);
+		bShowReport.addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				ShowMonthlyReport();
+			}
+
+		});
+
+		// Wrap the content in a DecoratorPanel
+		DecoratorPanel decPanel = new DecoratorPanel();
+		decPanel.setWidth("300px");
+		decPanel.setWidget(layout);
+		return decPanel;
+	}
+
+	private DecoratorPanel InitInvoiceReportPanel() {
+		FlexTable layout = new FlexTable();
+		layout.setCellSpacing(6);
+		FlexCellFormatter cellFormatter = layout.getFlexCellFormatter();
+
+		// Add a title to the form
+		layout.setHTML(0, 0, "Invoice Report");
+		cellFormatter.setColSpan(0, 0, 2);
+		cellFormatter.setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+
+		// Add some standard form options
+		layout.setHTML(1, 0, "Invoice month:");
+		layout.setWidget(1, 1, ShowMonthForReport());
+		Button bShowReport = new Button("Show");
+		layout.setWidget(1, 2, bShowReport);
+
+		bShowReport.addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				ShowInvoiceReport();
+			}
+
+		});
+
+		// Wrap the content in a DecoratorPanel
+		DecoratorPanel decPanel = new DecoratorPanel();
+		decPanel.setWidth("300px");
+		decPanel.setWidget(layout);
+		return decPanel;
+	}
+
+	private DecoratorPanel ShowDailyReport() {
+		VerticalPanel vpReport = new VerticalPanel();
+
+		vpReport.setWidth("900px");
+		vpReport.setHeight("500px");
+
+		vpReport.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		vpReport.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+
+		Label lReportTitle = new Label("Daily Report");
+
+		Button bReportSave = new Button("Save");
+		bReportSave.setWidth("20%");
+		bReportSave.setHeight("40px");
+		
+		bReportSave.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				
+				ReportServiceClientImpl reportService = new ReportServiceClientImpl(GWT.getModuleBaseURL() + "reportService");
+
+				try {
+					reportService.getDailyReport();
+					
+					
+
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+
+
+		String[] reportComponent = { AppConstants.REPORT_DATE, AppConstants.VEHICLE_TYPE, AppConstants.VEHICLE_NUMBER,
+				AppConstants.REPORTING_TIME, AppConstants.START_TIME, AppConstants.END_TIME, AppConstants.RELEASE_TIME,
+				AppConstants.TOTAL_KMS_TRAVELLED, AppConstants.TOTAL_HRS_TRAVELLED };
+
+		String[] reportComponent1 = { AppConstants.REPORT_DATE1, AppConstants.VEHICLE_TYPE1,
+				AppConstants.VEHICLE_NUMBER1, AppConstants.REPORTING_TIME1, AppConstants.START_TIME1,
+				AppConstants.END_TIME1, AppConstants.RELEASE_TIME1, AppConstants.TOTAL_KMS_TRAVELLED1,
+				AppConstants.TOTAL_HRS_TRAVELLED1 };
+
+		VerticalPanel vpReportContent = new VerticalPanel();
+		vpReportContent.setWidth("50%");
+		vpReportContent.setHeight("100%");
+		vpReportContent.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		vpReportContent.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+
+		Grid grid = new Grid(9, 2);
+
+		// Add images to the grid
+		int numRows = grid.getRowCount();
+		for (int row = 0; row < numRows; row++) {
+			HTML rowText = new HTML(reportComponent[row]);
+			HTML rowText1 = new HTML(reportComponent1[row]);
+			rowText.getElement().getStyle().setFontSize(12.0, Unit.PT);
+			rowText.getElement().getStyle().setFontWeight(FontWeight.BOLD);
+
+			rowText1.getElement().getStyle().setFontSize(12.0, Unit.PT);
+
+			grid.getCellFormatter().setWidth(row, FIRST_COLUMN, "300px");
+
+			grid.getCellFormatter().setWidth(row, SECOND_COLUMN, "500px");
+
+			grid.setWidget(row, FIRST_COLUMN, rowText);
+			grid.setWidget(row, SECOND_COLUMN, rowText1);
+		}
+
+		// Return the panel
+		grid.ensureDebugId("cwGrid");
+
+		vpReportContent.add(grid);
+
+		vpReport.add(lReportTitle);
+		vpReport.add(vpReportContent);
+		vpReport.add(bReportSave);
+
+		// Wrap the content in a DecoratorPanel
+		DecoratorPanel decPanel = new DecoratorPanel();
+		decPanel.setWidget(vpReport);
+		return decPanel;
+
+	}
+
+	private DecoratorPanel ShowMonthlyReport() {
+		VerticalPanel vpReport = new VerticalPanel();
+
+		vpReport.setWidth("900px");
+		vpReport.setHeight("500px");
+
+		vpReport.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		vpReport.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+
+		Label lReportTitle = new Label("Monthly Report");
+
+		Button bReportSave = new Button("Save");
+		bReportSave.setWidth("20%");
+		bReportSave.setHeight("40px");
+
+		String[] reportComponent = { AppConstants.REPORT_DATE, AppConstants.VEHICLE_TYPE, AppConstants.VEHICLE_NUMBER,
+				AppConstants.VEHICLE_NUMBER, AppConstants.VEHICLE_NUMBER, AppConstants.VEHICLE_NUMBER,
+				AppConstants.VEHICLE_NUMBER, AppConstants.VEHICLE_NUMBER, AppConstants.VEHICLE_NUMBER };
+
+		VerticalPanel vpReportContent = new VerticalPanel();
+		vpReportContent.setWidth("50%");
+		vpReportContent.setHeight("100%");
+		vpReportContent.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		vpReportContent.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+
+		Grid grid = new Grid(9, 2);
+
+		// Add images to the grid
+		int numRows = grid.getRowCount();
+		for (int row = 0; row < numRows; row++) {
+			HTML rowText = new HTML(reportComponent[row]);
+			HTML rowText1 = new HTML(reportComponent[row]);
+			rowText.getElement().getStyle().setFontSize(12.0, Unit.PT);
+			rowText.getElement().getStyle().setFontWeight(FontWeight.BOLD);
+
+			rowText1.getElement().getStyle().setFontSize(12.0, Unit.PT);
+
+			grid.getCellFormatter().setWidth(row, FIRST_COLUMN, "300px");
+
+			grid.getCellFormatter().setWidth(row, SECOND_COLUMN, "500px");
+
+			grid.setWidget(row, FIRST_COLUMN, rowText);
+			grid.setWidget(row, SECOND_COLUMN, rowText1);
+		}
+
+		// Return the panel
+		grid.ensureDebugId("cwGrid");
+
+		vpReportContent.add(grid);
+
+		vpReport.add(lReportTitle);
+		vpReport.add(vpReportContent);
+		vpReport.add(bReportSave);
+
+		// Wrap the content in a DecoratorPanel
+		DecoratorPanel decPanel = new DecoratorPanel();
+		decPanel.setWidget(vpReport);
+		return decPanel;
+
+	}
+
+	private DecoratorPanel ShowInvoiceReport() {
+		VerticalPanel vpReport = new VerticalPanel();
+
+		vpReport.setWidth("900px");
+		vpReport.setHeight("500px");
+
+		vpReport.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		vpReport.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+
+		Label lReportTitle = new Label("Invoice Report");
+
+		Button bReportSave = new Button("Save");
+		bReportSave.setWidth("20%");
+		bReportSave.setHeight("40px");
+
+		String[] reportComponent = { AppConstants.REPORT_DATE, AppConstants.VEHICLE_TYPE, AppConstants.VEHICLE_NUMBER,
+				AppConstants.VEHICLE_NUMBER, AppConstants.VEHICLE_NUMBER, AppConstants.VEHICLE_NUMBER,
+				AppConstants.VEHICLE_NUMBER, AppConstants.VEHICLE_NUMBER, AppConstants.VEHICLE_NUMBER };
+
+		VerticalPanel vpReportContent = new VerticalPanel();
+		vpReportContent.setWidth("50%");
+		vpReportContent.setHeight("100%");
+		vpReportContent.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		vpReportContent.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+
+		Grid grid = new Grid(9, 2);
+
+		// Add images to the grid
+		int numRows = grid.getRowCount();
+		for (int row = 0; row < numRows; row++) {
+			HTML rowText = new HTML(reportComponent[row]);
+			HTML rowText1 = new HTML(reportComponent[row]);
+			rowText.getElement().getStyle().setFontSize(12.0, Unit.PT);
+			rowText.getElement().getStyle().setFontWeight(FontWeight.BOLD);
+
+			rowText1.getElement().getStyle().setFontSize(12.0, Unit.PT);
+
+			grid.getCellFormatter().setWidth(row, FIRST_COLUMN, "300px");
+
+			grid.getCellFormatter().setWidth(row, SECOND_COLUMN, "500px");
+
+			grid.setWidget(row, FIRST_COLUMN, rowText);
+			grid.setWidget(row, SECOND_COLUMN, rowText1);
+		}
+
+		// Return the panel
+		grid.ensureDebugId("cwGrid");
+
+		vpReportContent.add(grid);
+
+		vpReport.add(lReportTitle);
+		vpReport.add(vpReportContent);
+		vpReport.add(bReportSave);
+
+		// Wrap the content in a DecoratorPanel
+		DecoratorPanel decPanel = new DecoratorPanel();
+		decPanel.setWidget(vpReport);
+		return decPanel;
+
+	}
+
+	private ListBox ShowMonthForReport() {
+		// Add a drop box with the list types
+		final ListBox dropBox = new ListBox(false);
+		String[] listTypes = { "January", "Febuary", "November" };
+		for (int i = 0; i < listTypes.length; i++) {
+			dropBox.addItem(listTypes[i]);
+		}
+		dropBox.ensureDebugId("cwListBox-dropBox");
+		VerticalPanel dropBoxPanel = new VerticalPanel();
+		dropBoxPanel.setSpacing(4);
+		dropBoxPanel.add(new HTML("Hello"));
+		dropBoxPanel.add(dropBox);
+
+		// Return the panel
+		return dropBox;
+	}
+}

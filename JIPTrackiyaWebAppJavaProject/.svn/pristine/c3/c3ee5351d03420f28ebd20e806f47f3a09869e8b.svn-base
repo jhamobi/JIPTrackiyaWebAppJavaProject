@@ -1,0 +1,17 @@
+package com.jhamobi.trackiya.client.service;
+
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
+public class HubServiceCallback implements AsyncCallback<Void> {
+
+	@Override
+	public void onFailure(Throwable caught) {
+		Window.alert("Server Exception: " + caught.getMessage());
+	}
+
+	@Override
+	public void onSuccess(Void result) {
+	}
+
+}

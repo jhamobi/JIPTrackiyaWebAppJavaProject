@@ -1,0 +1,2 @@
+serviceClass: com.jhamobi.trackiya.client.service.HubService
+path: D08E81DAAFF6C6DFB951A09950C9170E.gwt.rpc

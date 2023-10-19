@@ -1,0 +1,27 @@
+package com.jhamobi.trackiya.server.tomcat.action;
+
+/**
+ * 
+ * @author majha
+ *
+ */
+public enum ActionPath {
+	REPORT_TIME_ACTION("/TrackiyaWebApp/App/setReportTime"),
+	START_TIME_ACTION("/TrackiyaWebApp/App/setStartTime"),
+	END_TIME_ACTION("/TrackiyaWebApp/App/setEndTime"),
+	RELEASE_TIME_ACTION("/TrackiyaWebApp/App/setReleaseTime"),
+	UPDATE_RUNNING_DATA("/TrackiyaWebApp/App/Trackiya/updateRunningData"),
+	BREAK_DOWN_ACTION("/TrackiyaWebApp/App/setBreakDown"),
+	LOGIN_ACTION("/TrackiyaWebApp/App/login");
+  
+  
+  private String path;
+  private ActionPath(String path){
+	  this.path = path;
+  }
+  
+  public String getPath() {
+	return path;
+  }
+  
+}

@@ -1,0 +1,148 @@
+package com.jhamobi.trackiya.client;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style.FontWeight;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.rpc.ServiceDefTarget;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.jhamobi.trackiya.client.model.Hub;
+import com.jhamobi.trackiya.client.service.HubService;
+import com.jhamobi.trackiya.client.service.HubServiceAsync;
+import com.jhamobi.trackiya.client.service.HubServiceCallback;
+
+public class HubRegWebPage {
+	TextBox tbHubId;
+	TextBox tbHubName;
+	TextBox tbHubLongi;
+	TextBox tbHubLati;
+
+	public HubRegWebPage() {
+	}
+
+	public VerticalPanel InitHubRegistrationWebPage() {
+		VerticalPanel vPanel = new VerticalPanel();
+		vPanel.setSpacing(5);
+
+		Button bRegister = new Button("Register");
+		bRegister.setHeight("50px");
+		bRegister.setWidth("20%");
+
+		vPanel.setWidth("100%");
+		vPanel.setHeight("100%");
+		vPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		vPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+
+		vPanel.add(HubInfoFields());
+		vPanel.add(HubLocFields());
+		vPanel.add(bRegister);
+
+		bRegister.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				Hub newHub = new Hub();
+				newHub.setId(tbHubId.getText());
+				newHub.setName(tbHubName.getText());
+				newHub.setLongitude(Double.valueOf(tbHubLongi.getText()));
+				newHub.setLatitude(Double.valueOf(tbHubLati.getText()));
+				
+				
+				HubServiceAsync service = GWT.create(HubService.class);
+				        ServiceDefTarget serviceDef = (ServiceDefTarget) service;
+				        serviceDef.setServiceEntryPoint(GWT.getModuleBaseURL()
+				            + "hubService");
+				        service.addHub(newHub, new HubServiceCallback());
+
+			}
+		});
+
+		return vPanel;
+
+	}
+
+	private VerticalPanel HubInfoFields() {
+
+		VerticalPanel vpHubInfo = new VerticalPanel();
+		Label lHubInfo = new Label("Hub Info : ");
+		lHubInfo.getElement().getStyle().setFontSize(14.0, Unit.PT);
+		lHubInfo.getElement().getStyle().setFontWeight(FontWeight.BOLD);
+
+		HorizontalPanel hpHubInfo = new HorizontalPanel();
+		hpHubInfo.setSpacing(10);
+
+		HorizontalPanel hpHubId = new HorizontalPanel();
+		hpHubId.setSpacing(4);
+
+		Label lHubId = new Label("Hub Id : ");
+		lHubId.setWidth("150px");
+		tbHubId = new TextBox();
+
+		hpHubId.add(lHubId);
+		hpHubId.add(tbHubId);
+
+		HorizontalPanel hpHubName = new HorizontalPanel();
+		hpHubName.setSpacing(4);
+
+		Label lHubName = new Label("Hub Name : ");
+		lHubName.setWidth("150px");
+		tbHubName = new TextBox();
+
+		hpHubName.add(lHubName);
+		hpHubName.add(tbHubName);
+
+		hpHubInfo.add(hpHubId);
+		hpHubInfo.add(hpHubName);
+
+		vpHubInfo.add(lHubInfo);
+		vpHubInfo.add(hpHubInfo);
+
+		return vpHubInfo;
+
+	}
+
+	private VerticalPanel HubLocFields() {
+
+		VerticalPanel vpHubLocInfo = new VerticalPanel();
+		Label lHubLocInfo = new Label("Hub Location : ");
+		lHubLocInfo.getElement().getStyle().setFontSize(14.0, Unit.PT);
+		lHubLocInfo.getElement().getStyle().setFontWeight(FontWeight.BOLD);
+
+		HorizontalPanel hpHubLoc = new HorizontalPanel();
+		hpHubLoc.setSpacing(10);
+
+		HorizontalPanel hpHubLongi = new HorizontalPanel();
+		hpHubLongi.setSpacing(4);
+
+		Label lHubLongi = new Label("Hub Longitude : ");
+		lHubLongi.setWidth("150px");
+		tbHubLongi = new TextBox();
+
+		hpHubLongi.add(lHubLongi);
+		hpHubLongi.add(tbHubLongi);
+
+		HorizontalPanel hpHubLati = new HorizontalPanel();
+		hpHubLati.setSpacing(4);
+
+		Label lHubLati = new Label("Hub Latitude : ");
+		lHubLati.setWidth("150px");
+		tbHubLati = new TextBox();
+
+		hpHubLati.add(lHubLati);
+		hpHubLati.add(tbHubLati);
+
+		hpHubLoc.add(hpHubLati);
+		hpHubLoc.add(hpHubLongi);
+
+		vpHubLocInfo.add(lHubLocInfo);
+		vpHubLocInfo.add(hpHubLoc);
+
+		return vpHubLocInfo;
+
+	}
+}

@@ -1,0 +1,333 @@
+package com.jhamobi.trackiya.client;
+
+import static com.jhamobi.trackiya.client.TrackiyaWebApp.vehicleRunList;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.gwt.cell.client.Cell.Context;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
+import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.view.client.CellPreviewEvent;
+import com.google.gwt.view.client.CellPreviewEvent.Handler;
+import com.jhamobi.trackiya.client.model.RunningData;
+import com.jhamobi.trackiya.client.model.TrackingData;
+import com.jhamobi.trackiya.client.model.Vehicle;
+
+public class VehicleRunStatusWebPage {
+	List<VehicleRunStatus> vehicleRunStatusList;
+	private CellTable<VehicleRunStatus> table;
+
+	public VehicleRunStatusWebPage() {
+	}
+
+	public CellTable<VehicleRunStatus> InitVehicleRunStatusWebPage() {
+		vehicleRunStatusList = new ArrayList<VehicleRunStatus>();
+		if (vehicleRunList != null) {
+			for (Vehicle vehicle : vehicleRunList) {
+				if (vehicle.getTrackingData() != null) {
+					RunningData runningData = vehicle.getTrackingData().getRunningData();
+					if (runningData != null) {
+						VehicleRunStatus vehicleRunStatus = new VehicleRunStatus(vehicle.getNumber(), "Not Reported",
+								runningData.isRunning(), runningData.getCurrentAddress(),
+								runningData.getDistanceTravelled(), runningData.getTimeTravelled());
+						vehicleRunStatusList.add(vehicleRunStatus);
+					}
+				}
+			}
+		}
+
+		// Create a CellTable.
+		table = new CellTable<VehicleRunStatus>();
+		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
+
+		// Add a text column to show the name.
+		TextColumn<VehicleRunStatus> vehicleNum = new TextColumn<VehicleRunStatus>() {
+			@Override
+			public String getValue(VehicleRunStatus object) {
+				return object.getVehicleNum();
+			}
+		};
+		table.addColumn(vehicleNum, "Vehicle No.");
+
+		// Add a text column to show the name.
+		TextColumn<VehicleRunStatus> status = new TextColumn<VehicleRunStatus>() {
+			@Override
+			public String getValue(VehicleRunStatus object) {
+				return object.getVehicleStatus();
+			}
+		};
+		table.addColumn(status, "Status");
+
+		// Add a text column to show the name.
+		TextColumn<VehicleRunStatus> runningStatus = new TextColumn<VehicleRunStatus>() {
+			@Override
+			public String getCellStyleNames(Context context, VehicleRunStatus object) {
+				String style = null;
+				boolean runningStatus = object.getVehicleRunningStatus();
+				if (runningStatus == true)
+					style = "gwt-Green-Text";
+				else
+					style = "gwt-Red-Text";
+				return style;
+			}
+
+			@Override
+			public String getValue(VehicleRunStatus object) {
+				String vehicleRunStatus;
+				if (object.getVehicleRunningStatus())
+					vehicleRunStatus = "Running";
+				else
+					vehicleRunStatus = "Stop";
+
+				return vehicleRunStatus;
+			}
+		};
+		table.addColumn(runningStatus, "Running Status");
+
+		// Add a text column to show the name.
+		TextColumn<VehicleRunStatus> currLocation = new TextColumn<VehicleRunStatus>() {
+			@Override
+			public String getValue(VehicleRunStatus object) {
+				return object.getVehicleCurrLoc();
+			}
+		};
+		table.addColumn(currLocation, "Current Location");
+
+		// Add a text column to show the name.
+		TextColumn<VehicleRunStatus> distTravelled = new TextColumn<VehicleRunStatus>() {
+			@Override
+			public String getValue(VehicleRunStatus object) {
+				String vehicleDistTravelled = object.getVehicleDistTravelled();
+				if(vehicleDistTravelled == null || vehicleDistTravelled.trim().isEmpty())
+					return vehicleDistTravelled;
+				else{
+					Double distance = Double.valueOf(vehicleDistTravelled)/1000;
+					return distance+" KM";
+				}
+					
+			}
+		};
+		table.addColumn(distTravelled, "Distance Travelled");
+
+		// Add a text column to show the name.
+		TextColumn<VehicleRunStatus> timeTravelled = new TextColumn<VehicleRunStatus>() {
+			@Override
+			public String getValue(VehicleRunStatus object) {
+				String vehicleTimeLapsed = object.getVehicleTimeLapsed();
+				if(vehicleTimeLapsed == null || vehicleTimeLapsed.trim().isEmpty())
+					return vehicleTimeLapsed;
+				else{
+					Long valueOf = Long.valueOf(vehicleTimeLapsed);
+					return GetDurationLapsed(valueOf);
+				}
+			}
+		};
+		table.addColumn(timeTravelled, "Time Travelled");
+
+		// Set the total row count. This isn't strictly necessary, but it
+		// affects
+		// paging calculations, so its good habit to keep the row count up to
+		// date.
+		table.setRowCount(vehicleRunStatusList.size(), true);
+
+		// Push the data into the widget.
+		table.setRowData(0, vehicleRunStatusList);
+
+		table.addCellPreviewHandler(new Handler<VehicleRunStatus>() {
+
+			@Override
+			public void onCellPreview(CellPreviewEvent<VehicleRunStatus> event) {
+				if ("click".equals(event.getNativeEvent().getType())) {
+					if (event.getColumn() >= 0) {
+						// VehicleRunningStatus object = event.getValue();
+						// Window.alert("Column clicked: " + event.getColumn());
+
+						ShowDialogBox();
+					}
+				}
+			}
+
+		});
+
+		return table;
+	}
+
+	private void ShowDialogBox() {
+		// Create the popup dialog box
+		final DialogBox dialogBox = new DialogBox();
+		dialogBox.setText("Vehicle Detail");
+		dialogBox.setAnimationEnabled(true);
+		final Button closeButton = new Button("Close");
+		// We can set the id of a widget by accessing its Element
+		closeButton.getElement().setId("standardButton");
+
+		// final Label quesContentLabel = new Label();
+		final HTML vehicleNumHtml = new HTML();
+		vehicleNumHtml.setHTML("Vehicle Number : " + "MH-12-ET-3075");
+
+		final HTML vehicleTypeHtml = new HTML();
+		vehicleTypeHtml.setHTML("Vehicle Type : " + "Auto");
+
+		final HTML driverNameHtml = new HTML();
+		driverNameHtml.setHTML("Driver Name : " + "Mr. X");
+
+		final HTML driverMobileNumHtml = new HTML();
+		driverMobileNumHtml.setHTML("Driver Mobile Number : " + "9730246928");
+
+		final HTML ownerNameHtml = new HTML();
+		ownerNameHtml.setHTML("Owner Name : " + "Mr. Y");
+
+		final HTML ownerMobileNumHtml = new HTML();
+		ownerMobileNumHtml.setHTML("Owner Mobile Number : " + "9730246928");
+
+		final HTML rateWithin1500KmHtml = new HTML();
+		rateWithin1500KmHtml.setHTML("Rate within 1500 Km : " + "Rs. 10");
+
+		final HTML rateAbove1500KmHtml = new HTML();
+		rateAbove1500KmHtml.setHTML("Rate above 1500 Km : " + "Rs. 12");
+
+		final HTML rateWithin12HrsHtml = new HTML();
+		rateWithin12HrsHtml.setHTML("Rate within 12 Hrs : " + "Rs. 12");
+
+		final HTML rateAbove12HrsHtml = new HTML();
+		rateAbove12HrsHtml.setHTML("Rate above 12 Hrs : " + "Rs. 10");
+
+		VerticalPanel dialogVPanel = new VerticalPanel();
+		dialogVPanel.setSpacing(10);
+		dialogVPanel.addStyleName("dialogVPanel");
+		dialogVPanel.add(vehicleNumHtml);
+		dialogVPanel.add(vehicleTypeHtml);
+		dialogVPanel.add(driverNameHtml);
+		dialogVPanel.add(driverMobileNumHtml);
+		dialogVPanel.add(ownerNameHtml);
+		dialogVPanel.add(ownerMobileNumHtml);
+		dialogVPanel.add(rateWithin1500KmHtml);
+		dialogVPanel.add(rateAbove1500KmHtml);
+		dialogVPanel.add(rateWithin12HrsHtml);
+		dialogVPanel.add(rateAbove12HrsHtml);
+		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
+		dialogVPanel.add(closeButton);
+
+		dialogBox.center();
+		dialogBox.setWidget(dialogVPanel);
+		closeButton.setFocus(true);
+
+		dialogBox.show();
+
+		// Add a handler to close the DialogBox
+		closeButton.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogBox.hide();
+			}
+		});
+
+	}
+
+	public void refreshData() {
+		if (vehicleRunList != null) {
+			vehicleRunStatusList = new ArrayList<VehicleRunStatus>();
+			for (Vehicle vehicle : vehicleRunList) {
+				TrackingData trackingData = vehicle.getTrackingData();
+				VehicleRunStatus vehicleRunStatus = null;
+				if (trackingData != null) {
+					String status = "Reported";
+					String releasetime = trackingData.getReleasetime();
+					String endTime = trackingData.getEndTime();
+					String startTime = trackingData.getStartTime();
+					if(releasetime != null && !releasetime.trim().isEmpty())
+						status = "Released";
+					else if(endTime != null && !endTime.trim().isEmpty())
+						status = "Trip Ended";
+					else if(startTime != null && !startTime.trim().isEmpty())
+						status = "Trip Started";
+					RunningData runningData = vehicle.getTrackingData().getRunningData();
+					if (runningData != null) {
+<<<<<<< .mine
+						 vehicleRunStatus = new VehicleRunStatus(vehicle.getNumber(), null,
+								runningData.isRunning(), runningData.getCurrentAddress(),
+								runningData.getDistanceTravelled(), runningData.getTimeTravelled());
+=======
+						 vehicleRunStatus = new VehicleRunStatus(vehicle.getNumber(), status,
+								!runningData.isBreakDown(), runningData.getCurrentAddress(),
+								runningData.getDistanceTravelled(), runningData.getTimeTravelled());
+>>>>>>> .r2484
+						
+					}else{
+						 vehicleRunStatus = new VehicleRunStatus(vehicle.getNumber(), status,
+									false, "",
+									"", null);
+					}
+				}else{
+					vehicleRunStatus = new VehicleRunStatus(vehicle.getNumber(), null,
+							false, "","", null);
+				}
+				
+				vehicleRunStatusList.add(vehicleRunStatus);
+			}
+			table.setRowCount(vehicleRunStatusList.size(), true);
+
+			// Push the data into the widget.
+			table.setRowData(0, vehicleRunStatusList);
+		}
+		return;
+	}
+	
+	public static String GetDurationLapsed(Long timeDiffInMilliSecs) {
+		String duration = "0.0";
+
+		try{
+			long numDays = TimeUnit.MILLISECONDS.toDays(timeDiffInMilliSecs);
+
+			timeDiffInMilliSecs -= TimeUnit.DAYS.toMillis(numDays);
+
+			long numHrs = TimeUnit.MILLISECONDS.toHours(timeDiffInMilliSecs);
+
+			timeDiffInMilliSecs -= TimeUnit.HOURS.toMillis(numHrs);
+
+			long numMins = TimeUnit.MILLISECONDS.toMinutes(timeDiffInMilliSecs);
+
+			timeDiffInMilliSecs -= TimeUnit.MINUTES.toMillis(numMins);
+
+			long numSecs = TimeUnit.MILLISECONDS.toSeconds(timeDiffInMilliSecs);
+
+			timeDiffInMilliSecs -= TimeUnit.SECONDS.toMillis(numSecs);
+
+			if (numDays != 0) {
+				if (numDays == 1)
+					duration = String.valueOf(numDays) + " day";
+				else
+					duration = String.valueOf(numDays) + " days";
+
+			} else if (numHrs != 0) {
+				if (numHrs == 1)
+					duration = String.valueOf(numHrs) + " hr";
+				else
+					duration = String.valueOf(numHrs) + " hrs";
+			} else if (numMins != 0) {
+				if (numMins == 1)
+					duration = String.valueOf(numMins) + " min";
+				else
+					duration = String.valueOf(numMins) + " mins";
+			} else if (numSecs > 0) {
+				if (numSecs == 1)
+					duration = String.valueOf(numSecs) + " sec";
+				else
+					duration = String.valueOf(numSecs) + " secs";
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return duration;
+
+	}
+
+}
